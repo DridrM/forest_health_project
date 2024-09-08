@@ -5,7 +5,6 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fhealth"
 version = "0.1.0"
-requires-python = "^3.12"
 authors = [{name = "DridrM"}]
 description = "Monitoring the health of forests through sattelite imagery and deep learning"
 readme = "README.rst"
