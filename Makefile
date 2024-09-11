@@ -5,7 +5,7 @@ sources = forest_health_project
 test: format lint unittest
 
 format:
-  isort $(sources) tests
+	isort $(sources) tests
 	black $(sources) tests
 
 lint:
@@ -27,4 +27,4 @@ clean:
 	rm -rf coverage.xml .coverage
 
 dependencies:
-  conda env export --from-history > environment.yml
+	conda env export --from-history > environment.yml

@@ -1,19 +1,17 @@
 name: forest_health_project-env
 channels:
   - defaults
-  - pytorch
-  - nvidia
 dependencies:
+  - black
+  - flake8
+  - ipykernel
+  - isort
+  - pre-commit
+  - pytest
+  - pytest-cov
   - python=3.12
   - pytorch
   - pytorch-cuda=12.1
   - torchaudio
   - torchvision
-  - ipykernel
-  - black
-  - isort
-  - pytest
-  - pre-commit
-  - pytest-cov
-  - flake8
-prefix: ~/miniconda3/envs/forest_health_project-env
+prefix: /home/rdaneel/miniconda3/envs/forest_health_project-env
