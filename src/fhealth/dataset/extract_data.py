@@ -19,6 +19,7 @@ class DataStatus(str, Enum):
     valid = "valid"
     test = "test"
 
+
 class GCPDataHandler(BaseModel):
     """
     A handler for loading and managing data from a GCP bucket.
