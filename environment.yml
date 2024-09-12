@@ -14,4 +14,7 @@ dependencies:
   - pytorch-cuda=12.1
   - torchaudio
   - torchvision
+  - google-cloud-storage
+  - pydantic
+  - shapely
 prefix: /home/rdaneel/miniconda3/envs/forest_health_project-env
