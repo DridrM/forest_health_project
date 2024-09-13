@@ -10,4 +10,4 @@
 
 ## How to use the project
 
-![Tests](https://github.com/DridrM/{{cookiecutter.project_slug}}/actions/workflows/run_tests.yaml/badge.svg)
+![Tests](https://github.com/DridrM/forest_health_project/actions/workflows/run_tests.yaml/badge.svg)
