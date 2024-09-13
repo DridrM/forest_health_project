@@ -1,17 +1,19 @@
 import json
+import pickle
 from enum import Enum
+from io import BytesIO
+from typing import Any, Optional
 
 from google.cloud import storage
 from google.oauth2 import service_account
-
-from io import BytesIO
 from PIL import Image
-import pickle
-
 from pydantic import BaseModel, Field
-from typing import Optional, Any
 
-from fhealth.params import GOOGLE_APPLICATION_CREDENTIALS, GCP_PROJECT_ID, GCP_BUCKET_NAME
+from fhealth.params import (
+    GCP_BUCKET_NAME,
+    GCP_PROJECT_ID,
+    GOOGLE_APPLICATION_CREDENTIALS,
+)
 
 
 class DataStatus(str, Enum):
@@ -46,16 +48,24 @@ class GCPDataHandler(BaseModel):
         Status of the data (train, valid, or test).
     """
 
-    gcp_credentials: str = Field(GOOGLE_APPLICATION_CREDENTIALS, repr=False, exclude=True)
+    gcp_credentials: str = Field(
+        GOOGLE_APPLICATION_CREDENTIALS, repr=False, exclude=True
+    )
     project_id: str = Field(GCP_PROJECT_ID, repr=False, exclude=True)
     bucket_name: str = Field(GCP_BUCKET_NAME, repr=False, exclude=True)
 
     client: Optional[storage.Client] = Field(None, description="GCP client instance")
     bucket: Optional[storage.Bucket] = Field(None, description="GCP bucket instance")
 
-    rgb_image: Optional[Image.Image] = Field(None, kw_only=True, description="RGB PIL image object")
-    mask: Optional[Any] = Field(None, kw_only=True, description="Pickle object of the mask data")
-    data_status: DataStatus = Field(None, kw_only=True, description="Train, valid or test data")
+    rgb_image: Optional[Image.Image] = Field(
+        None, kw_only=True, description="RGB PIL image object"
+    )
+    mask: Optional[Any] = Field(
+        None, kw_only=True, description="Pickle object of the mask data"
+    )
+    data_status: DataStatus = Field(
+        None, kw_only=True, description="Train, valid or test data"
+    )
 
     class Config:
         arbitrary_types_allowed = True
@@ -75,10 +85,14 @@ class GCPDataHandler(BaseModel):
         with open(self.gcp_credentials) as source:
             info = json.load(source)
 
-        storage_credentials = service_account.Credentials.from_service_account_info(info)
+        storage_credentials = service_account.Credentials.from_service_account_info(
+            info
+        )
 
         # Create the bucket instance
-        self.client = storage.Client(project=self.project_id, credentials=storage_credentials)
+        self.client = storage.Client(
+            project=self.project_id, credentials=storage_credentials
+        )
         self.bucket = self.client.bucket(self.bucket_name)
 
     def download_blob(self, blob_name: str) -> bytes:

@@ -1,4 +1,4 @@
-sources = forest_health_project
+sources = src
 
 .PHONY: test format lint unittest coverage pre-commit clean
 
