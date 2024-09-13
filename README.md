@@ -1,4 +1,4 @@
-# {{cookiecutter.project_name}}
+# Forest health project
 
 ## Overview
 
