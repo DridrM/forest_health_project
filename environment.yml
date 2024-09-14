@@ -17,4 +17,5 @@ dependencies:
   - google-cloud-storage
   - pydantic
   - shapely
+  - pytest-mock
 prefix: /home/rdaneel/miniconda3/envs/forest_health_project-env

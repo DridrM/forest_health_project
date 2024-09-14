@@ -2,12 +2,13 @@ import json
 import pickle
 from enum import Enum
 from io import BytesIO
-from typing import Any, Optional
+from typing import Optional
 
 from google.cloud import storage
 from google.oauth2 import service_account
 from PIL import Image
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from shapely.geometry import Polygon
 
 from fhealth.params import (
     GCP_BUCKET_NAME,
@@ -54,21 +55,24 @@ class GCPDataHandler(BaseModel):
     project_id: str = Field(GCP_PROJECT_ID, repr=False, exclude=True)
     bucket_name: str = Field(GCP_BUCKET_NAME, repr=False, exclude=True)
 
-    client: Optional[storage.Client] = Field(None, description="GCP client instance")
-    bucket: Optional[storage.Bucket] = Field(None, description="GCP bucket instance")
+    client: Optional[storage.Client] = Field(
+        None, init=False, description="GCP client instance"
+    )
+    bucket: Optional[storage.Bucket] = Field(
+        None, init=False, description="GCP bucket instance"
+    )
 
     rgb_image: Optional[Image.Image] = Field(
-        None, kw_only=True, description="RGB PIL image object"
+        None, init=False, description="RGB PIL image object"
     )
-    mask: Optional[Any] = Field(
-        None, kw_only=True, description="Pickle object of the mask data"
+    mask: Optional[list[Polygon]] = Field(
+        None, init=False, description="Pickle object of the mask data"
     )
     data_status: DataStatus = Field(
-        None, kw_only=True, description="Train, valid or test data"
+        None, init=False, description="Train, valid or test data"
     )
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def __init__(self, **data) -> None:
         """

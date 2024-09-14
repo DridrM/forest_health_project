@@ -10,6 +10,9 @@ description = "Monitoring the health of forests through sattelite imagery and de
 readme = "README.rst"
 license = {file = "LICENSE"}
 
+[tool.setuptools.packages.find]
+where = ["src", "tests"]
+
 [tool.black]
 line-length = 88
 target-version = ['py310', 'py311', 'py312']
