@@ -7,6 +7,10 @@ on:
 jobs:
   run-tests:
 
+    defaults:
+      run:
+        shell: bash -l {0}
+
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -22,20 +26,14 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
+          activate-environment: forest_health_project-env
+          environment-file: /home/runner/work/forest_health_project/forest_health_project/environment.yml
+          auto-activate-base: false
           auto-update-conda: true
-
-      - name: Initialize conda for shell interaction
-        run: |
-          conda init
-
-      - name: Reload the shell
-        run: source /home/runner/.bashrc
 
       - name: Create conda environment and install dependencies
         run: |
           conda env create -f environment.yml
-          conda init
-          source /home/runner/.bashrc
           conda activate forest_health_project-env
 
       - name: Install pip
