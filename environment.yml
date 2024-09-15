@@ -1,6 +1,8 @@
 name: forest_health_project-env
 channels:
   - defaults
+  - pytorch
+  - nvidia
 dependencies:
   - black
   - flake8
