@@ -35,6 +35,7 @@ jobs:
         run: |
           conda env create -f environment.yml
           conda init
+          source /home/runner/.bashrc
           conda activate forest_health_project-env
 
       - name: Install pip
