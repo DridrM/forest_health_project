@@ -27,7 +27,7 @@ jobs:
       - name: Initialize conda for shell interaction
         run: |
           conda init --all
-          source ~/.bashrc
+          source /home/runner/.bashrc
 
       - name: Create conda environment and install dependencies
         run: |
