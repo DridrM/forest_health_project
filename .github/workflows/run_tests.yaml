@@ -25,12 +25,14 @@ jobs:
           auto-update-conda: true
 
       - name: Initialize conda for shell interaction
-        run: conda init --all
+        run: |
+          conda init --all
+          source ~/.bashrc
 
       - name: Create conda environment and install dependencies
         run: |
           conda env create -f environment.yml
-          conda activate myenv
+          conda activate forest_health_project-env
 
       - name: Install pip
         run: conda install pip
