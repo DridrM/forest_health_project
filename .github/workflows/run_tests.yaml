@@ -32,9 +32,7 @@ jobs:
           auto-update-conda: true
 
       - name: Create conda environment and install dependencies
-        run: |
-          conda env create -f environment.yml
-          conda activate forest_health_project-env
+        run: conda activate forest_health_project-env
 
       - name: Install pip
         run: conda install pip
