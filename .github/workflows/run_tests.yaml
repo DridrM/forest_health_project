@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: forest_health_project-env
-          environment-file: /home/runner/work/forest_health_project/forest_health_project/environment.yml
+          environment-file: environment.yml
           auto-activate-base: false
           auto-update-conda: true
 
