@@ -26,7 +26,7 @@ jobs:
 
       - name: Initialize conda for shell interaction
         run: |
-          conda init --all
+          conda init
 
       - name: Reload the shell
         run: source /home/runner/.bashrc
@@ -34,6 +34,7 @@ jobs:
       - name: Create conda environment and install dependencies
         run: |
           conda env create -f environment.yml
+          conda init
           conda activate forest_health_project-env
 
       - name: Install pip
