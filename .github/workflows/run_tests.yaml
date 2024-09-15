@@ -24,6 +24,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           auto-update-conda: true
 
+      - name: Initialize conda for shell interaction
+        run: conda init --all
+
       - name: Create conda environment and install dependencies
         run: |
           conda env create -f environment.yml
