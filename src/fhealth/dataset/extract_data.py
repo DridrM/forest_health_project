@@ -50,10 +50,10 @@ class GCPDataHandler(BaseModel):
     """
 
     gcp_credentials: str = Field(
-        GOOGLE_APPLICATION_CREDENTIALS, repr=False, exclude=True
+        GOOGLE_APPLICATION_CREDENTIALS, kw_only=True, repr=False, exclude=True
     )
-    project_id: str = Field(GCP_PROJECT_ID, repr=False, exclude=True)
-    bucket_name: str = Field(GCP_BUCKET_NAME, repr=False, exclude=True)
+    project_id: str = Field(GCP_PROJECT_ID, kw_only=True, repr=False, exclude=True)
+    bucket_name: str = Field(GCP_BUCKET_NAME, kw_only=True, repr=False, exclude=True)
 
     client: Optional[storage.Client] = Field(
         None, init=False, description="GCP client instance"
