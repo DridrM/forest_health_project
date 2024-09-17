@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
+import pandas as pd
 from PIL import Image, ImageDraw
 from pydantic import BaseModel, ConfigDict, Field
 from shapely.geometry import Polygon
@@ -14,7 +15,8 @@ class ImageDataHandler(BaseModel):
     Pydantic-based data handler to manage RGB images, create masks from polygons,
     blend images, and set data status.
 
-    Attributes:
+    Fields:
+    ----------
         rgb_image (PIL.Image.Image): The RGB image used as the base for blending and mask creation.
         polygons (List[shapely.geometry.Polygon]): A list of Shapely polygons used to create the mask.
         blending_alpha (float): The alpha value (0 to 1) controlling the blending level between
@@ -143,3 +145,22 @@ class ImageDataHandler(BaseModel):
         # Resize both the mask image and the blended image to the target square size
         self.mask_image = self.mask_image.resize((target_size, target_size))
         self.blended_image = self.blended_image.resize((target_size, target_size))
+
+
+def concat_dicts_to_dataframe(*lists_of_dicts: List[Dict]) -> pd.DataFrame:
+    """
+    Concatenates multiple lists of dictionaries into a single pandas DataFrame.
+
+    Args:
+        *lists_of_dicts (List[Dict]): Variable number of lists, each containing dictionaries.
+
+    Returns:
+        pd.DataFrame: A concatenated DataFrame containing data from all input lists of dictionaries.
+    """
+    # Convert each list of dictionaries to a DataFrame
+    dataframes = [pd.DataFrame(list_dict) for list_dict in lists_of_dicts]
+
+    # Concatenate the DataFrames along rows (axis=0)
+    concatenated_df = pd.concat(dataframes, ignore_index=True)
+
+    return concatenated_df

@@ -20,4 +20,5 @@ dependencies:
   - pydantic
   - shapely
   - pytest-mock
+  - pandas
 prefix: /home/rdaneel/miniconda3/envs/forest_health_project-env

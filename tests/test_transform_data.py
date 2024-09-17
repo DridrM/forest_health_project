@@ -1,12 +1,13 @@
 import random
 
 import numpy as np
+import pandas as pd
 import pytest
 from PIL import Image
 from shapely.geometry import Polygon
 
 from fhealth.dataset.extract_data import DataStatus
-from fhealth.dataset.transform_data import ImageDataHandler
+from fhealth.dataset.transform_data import ImageDataHandler, concat_dicts_to_dataframe
 
 
 @pytest.fixture
@@ -140,3 +141,27 @@ def test_downgrade_resolution_without_images_raises_error(handler_with_data):
         ValueError, match="Blended image not available for resolution downgrade."
     ):
         handler_with_data.downgrade_resolution(50)
+
+
+def test_concat_dicts_to_dataframe():
+    """
+    Test the concat_dicts_to_dataframe function, ensuring it correctly concatenates
+    multiple lists of dictionaries into a single pandas DataFrame.
+    """
+    # Define test data - lists of dictionaries
+    list1 = [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]
+    list2 = [{"name": "Charlie", "age": 35}, {"name": "David", "age": 40}]
+    list3 = [{"name": "Eve", "age": 28}]
+
+    # Expected DataFrame after concatenation
+    expected_data = {
+        "name": ["Alice", "Bob", "Charlie", "David", "Eve"],
+        "age": [30, 25, 35, 40, 28],
+    }
+    expected_df = pd.DataFrame(expected_data)
+
+    # Call the function with multiple lists of dictionaries
+    result_df = concat_dicts_to_dataframe(list1, list2, list3)
+
+    # Check if the concatenated DataFrame matches the expected DataFrame
+    pd.testing.assert_frame_equal(result_df, expected_df)

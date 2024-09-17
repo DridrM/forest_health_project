@@ -1,8 +1,9 @@
 import json
 import pickle
-from enum import Enum
-from io import BytesIO
-from typing import Optional
+from csv import DictReader
+from enum import StrEnum
+from io import BytesIO, StringIO
+from typing import Dict, List, Optional
 
 from google.cloud import storage
 from google.oauth2 import service_account
@@ -17,7 +18,7 @@ from fhealth.params import (
 )
 
 
-class DataStatus(str, Enum):
+class DataStatus(StrEnum):
     train = "train"
     valid = "valid"
     test = "test"
@@ -62,16 +63,6 @@ class GCPDataHandler(BaseModel):
         None, init=False, description="GCP bucket instance"
     )
 
-    rgb_image: Optional[Image.Image] = Field(
-        None, init=False, description="RGB PIL image object"
-    )
-    mask: Optional[list[Polygon]] = Field(
-        None, init=False, description="Pickle object of the mask data"
-    )
-    data_status: DataStatus = Field(
-        None, init=False, description="Train, valid or test data"
-    )
-
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def __init__(self, **data) -> None:
@@ -110,11 +101,37 @@ class GCPDataHandler(BaseModel):
         blob_data = blob.download_as_bytes()
         return blob_data
 
+
+class GCPImageHandler(BaseModel, GCPDataHandler):
+    """
+    A handler class that extends the GCPDataHandler to manage RGB images and masks
+    retrieved from Google Cloud Storage (GCS) blobs. It supports loading and managing
+    image data and mask data (as Shapely polygons), and allows setting the data status
+    (train, valid, or test) for the object.
+
+    Fields:
+    ----------
+        rgb_image (Optional[Image.Image]): RGB PIL image object loaded from GCP.
+        mask (Optional[list[Polygon]]): List of Shapely polygons representing the mask data.
+        data_status (DataStatus): Data status representing the phase (train, valid, or test).
+    """
+
+    rgb_image: Optional[Image.Image] = Field(
+        None, init=False, description="RGB PIL image object"
+    )
+    mask: Optional[list[Polygon]] = Field(
+        None, init=False, description="Pickle object of the mask data"
+    )
+    data_status: DataStatus = Field(
+        None, init=False, description="Train, valid or test data"
+    )
+
     def load_rgb_image(self, blob_name: str) -> None:
         """
-        Loads an image from the GCP blob and stores it in the container.
+        Loads an RGB image from the GCP bucket as a PIL Image and stores it in the container.
 
-        :param blob_name: Name of the image blob.
+        Args:
+            blob_name (str): The name of the blob containing the image data.
         """
         image_data = self.download_blob(blob_name)
         rgb_image = Image.open(BytesIO(image_data))
@@ -122,9 +139,11 @@ class GCPDataHandler(BaseModel):
 
     def load_mask(self, blob_name: str) -> None:
         """
-        Loads a pickle object representing mask data from the GCP blob and stores it in the container.
+        Loads a pickle object representing mask data from the GCP bucket, and converts it
+        into a list of Shapely polygons.
 
-        :param blob_name: Name of the pickle blob.
+        Args:
+            blob_name (str): The name of the blob containing the pickle data.
         """
         pickle_data = self.download_blob(blob_name)
         polygons = pickle.loads(pickle_data)
@@ -132,8 +151,38 @@ class GCPDataHandler(BaseModel):
 
     def set_data_status(self, status: DataStatus) -> None:
         """
-        Set the data status for the handler (train, valid, or test).
+        Set the current data status for the handler (either 'train', 'valid', or 'test').
 
-        :param status: The new status to assign to the data.
+        Args:
+            status (DataStatus): The new data status to assign.
         """
         self.data_status = status
+
+
+class GCPCsvHandler(BaseModel, GCPDataHandler):
+    """
+    A handler class that extends the GCPDataHandler to manage CSV files retrieved from
+    Google Cloud Storage (GCS). It supports loading and storing CSV data as a list of dictionaries.
+
+    Fields:
+    ----------
+        csv_data (Optional[List[Dict[str, str]]]): List of dictionaries where each dictionary
+        represents a row from the CSV, with keys as column names.
+    """
+
+    csv_data: Optional[List[Dict[str, str]]] = Field(
+        None, init=False, description="List of dictionaries representing CSV data"
+    )
+
+    def load_csv(self, blob_name: str) -> None:
+        """
+        Loads a CSV file from the GCP bucket and stores it as a list of dictionaries.
+
+        Args:
+            blob_name (str): The name of the blob containing the CSV data.
+        """
+        csv_data_bytes = self.download_blob(blob_name)
+        csv_text = csv_data_bytes.decode("utf-8")
+        csv_reader = DictReader(StringIO(csv_text))
+
+        self.csv_data = [row for row in csv_reader]
