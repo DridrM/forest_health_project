@@ -102,7 +102,7 @@ class GCPDataHandler(BaseModel):
         return blob_data
 
 
-class GCPImageHandler(BaseModel, GCPDataHandler):
+class GCPImageHandler(GCPDataHandler, BaseModel):
     """
     A handler class that extends the GCPDataHandler to manage RGB images and masks
     retrieved from Google Cloud Storage (GCS) blobs. It supports loading and managing
@@ -159,7 +159,7 @@ class GCPImageHandler(BaseModel, GCPDataHandler):
         self.data_status = status
 
 
-class GCPCsvHandler(BaseModel, GCPDataHandler):
+class GCPCsvHandler(GCPDataHandler, BaseModel):
     """
     A handler class that extends the GCPDataHandler to manage CSV files retrieved from
     Google Cloud Storage (GCS). It supports loading and storing CSV data as a list of dictionaries.
