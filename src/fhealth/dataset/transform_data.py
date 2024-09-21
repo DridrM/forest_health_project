@@ -1,19 +1,16 @@
-from typing import Dict, List, Optional
+from typing import List, Optional, Union
 
-import numpy as np
-import pandas as pd
 from PIL import Image, ImageDraw
 from pydantic import BaseModel, ConfigDict, Field
 from shapely.geometry import Polygon
 
-from fhealth.dataset.extract_data import DataStatus
 from fhealth.params import DEFAULT_RGB_BLENDING_RATIO
 
 
 class ImageDataHandler(BaseModel):
     """
     Pydantic-based data handler to manage RGB images, create masks from polygons,
-    blend images, and set data status.
+    blend images.
 
     Fields:
     ----------
@@ -21,7 +18,6 @@ class ImageDataHandler(BaseModel):
         polygons (List[shapely.geometry.Polygon]): A list of Shapely polygons used to create the mask.
         blending_alpha (float): The alpha value (0 to 1) controlling the blending level between
                                 the mask and RGB image (0 = no mask, 1 = full mask).
-        data_status (DataStatus): The status of the data (train, valid, or test).
         mask_image (Optional[PIL.Image.Image]): The black-and-white mask image created from polygons,
                                                 initialized to None until generated.
         blended_image (Optional[PIL.Image.Image]): The blended image (RGB + mask), initialized to None
@@ -30,14 +26,11 @@ class ImageDataHandler(BaseModel):
 
     rgb_image: Image.Image
     mask_polygons: List[Polygon]
-    blending_alpha: float = Field(
+    blending_alpha: Union[float, None] = Field(
         DEFAULT_RGB_BLENDING_RATIO,
         ge=0.0,
         le=1.0,
         description="Blending level between 0 (no mask) and 1 (full mask)",
-    )
-    data_status: DataStatus = Field(
-        None, description="Status of the data (train, valid, or test)"
     )
     mask_image: Optional[Image.Image] = Field(
         None, init=False, description="The black-and-white image representing the mask"
@@ -103,28 +96,6 @@ class ImageDataHandler(BaseModel):
 
         self.mask_image = mask_image
 
-    def set_data_status(self, status: DataStatus) -> None:
-        """
-        Sets the data status (train, valid, or test).
-
-        Args:
-            status (DataStatus): The new status to set for the data (train, valid, or test).
-        """
-        self.data_status = status
-
-    @staticmethod
-    def image_to_numpy(image: Image.Image) -> np.ndarray:
-        """
-        Converts a PIL image to a NumPy array.
-
-        Args:
-            image (PIL.Image.Image): The image to convert.
-
-        Returns:
-            np.ndarray: The corresponding NumPy array.
-        """
-        return np.array(image)
-
     def downgrade_resolution(self, target_size: int) -> None:
         """
         Downgrades the resolution of the mask image and blended image to the specified target size,
@@ -145,22 +116,3 @@ class ImageDataHandler(BaseModel):
         # Resize both the mask image and the blended image to the target square size
         self.mask_image = self.mask_image.resize((target_size, target_size))
         self.blended_image = self.blended_image.resize((target_size, target_size))
-
-
-def concat_dicts_to_dataframe(*lists_of_dicts: List[Dict]) -> pd.DataFrame:
-    """
-    Concatenates multiple lists of dictionaries into a single pandas DataFrame.
-
-    Args:
-        *lists_of_dicts (List[Dict]): Variable number of lists, each containing dictionaries.
-
-    Returns:
-        pd.DataFrame: A concatenated DataFrame containing data from all input lists of dictionaries.
-    """
-    # Convert each list of dictionaries to a DataFrame
-    dataframes = [pd.DataFrame(list_dict) for list_dict in lists_of_dicts]
-
-    # Concatenate the DataFrames along rows (axis=0)
-    concatenated_df = pd.concat(dataframes, ignore_index=True)
-
-    return concatenated_df

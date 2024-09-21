@@ -26,5 +26,8 @@ clean:
 	rm -rf .tox dist site
 	rm -rf coverage.xml .coverage
 
+clean-data:
+	rm -rf $(LOCAL_ROOT_DATA_PATH)/*
+
 dependencies:
 	conda env export --from-history > environment.yml

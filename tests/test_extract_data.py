@@ -7,7 +7,7 @@ import pytest
 from PIL import Image
 from shapely.geometry import MultiPolygon, Polygon
 
-from fhealth.dataset.extract_data import DataStatus, GCPCsvHandler, GCPImageHandler
+from fhealth.dataset.extract_data import GCPCsvHandler, GCPImageHandler
 
 
 # Fixture to initialize GCPImageHandler with mocked GCP components
@@ -56,6 +56,26 @@ def test_init(mock_gcp_image_handler):
     """
     assert mock_gcp_image_handler.client is not None
     assert mock_gcp_image_handler.bucket is not None
+
+
+def test_download_blob(monkeypatch, mock_gcp_image_handler):
+    """
+    Test the download_blob method, ensuring it correctly downloads a blob as bytes from GCP.
+    """
+    # Mock blob content
+    fake_blob_data = b"fake_blob_data"
+    mock_blob = MagicMock()
+    mock_blob.download_as_bytes.return_value = fake_blob_data
+    monkeypatch.setattr(
+        mock_gcp_image_handler.bucket, "blob", lambda blob_name: mock_blob
+    )
+
+    # Call the download_blob method
+    blob_data = mock_gcp_image_handler.download_blob("fake_blob")
+
+    # Assert the blob was downloaded correctly
+    assert blob_data == fake_blob_data
+    mock_blob.download_as_bytes.assert_called_once()
 
 
 def test_load_rgb_image(monkeypatch, mock_gcp_image_handler):
@@ -113,43 +133,6 @@ def test_load_mask(monkeypatch, mock_gcp_image_handler):
     assert isinstance(mock_gcp_image_handler.mask[0], Polygon)
 
 
-def test_set_data_status(mock_gcp_image_handler):
-    """
-    Test the set_data_status method for updating the data status field.
-    """
-    # Set and verify data status to 'train'
-    mock_gcp_image_handler.set_data_status(DataStatus.train)
-    assert mock_gcp_image_handler.data_status == DataStatus.train
-
-    # Set and verify data status to 'valid'
-    mock_gcp_image_handler.set_data_status(DataStatus.valid)
-    assert mock_gcp_image_handler.data_status == DataStatus.valid
-
-    # Set and verify data status to 'test'
-    mock_gcp_image_handler.set_data_status(DataStatus.test)
-    assert mock_gcp_image_handler.data_status == DataStatus.test
-
-
-def test_download_blob(monkeypatch, mock_gcp_image_handler):
-    """
-    Test the download_blob method, ensuring it correctly downloads a blob as bytes from GCP.
-    """
-    # Mock blob content
-    fake_blob_data = b"fake_blob_data"
-    mock_blob = MagicMock()
-    mock_blob.download_as_bytes.return_value = fake_blob_data
-    monkeypatch.setattr(
-        mock_gcp_image_handler.bucket, "blob", lambda blob_name: mock_blob
-    )
-
-    # Call the download_blob method
-    blob_data = mock_gcp_image_handler.download_blob("fake_blob")
-
-    # Assert the blob was downloaded correctly
-    assert blob_data == fake_blob_data
-    mock_blob.download_as_bytes.assert_called_once()
-
-
 def test_load_csv(monkeypatch, mock_gcp_image_handler):
     """
     Test the load_csv method of the GCPCsvHandler, ensuring it loads CSV data from a GCP blob.
@@ -175,5 +158,5 @@ def test_load_csv(monkeypatch, mock_gcp_image_handler):
     # Assert the CSV data was loaded correctly
     assert csv_handler.csv_data is not None
     assert len(csv_handler.csv_data) == 2
-    assert csv_handler.csv_data[0]["name"] == "Alice"
-    assert csv_handler.csv_data[1]["name"] == "Bob"
+    assert csv_handler.csv_data["name"][0] == "Alice"
+    assert csv_handler.csv_data["name"][1] == "Bob"
