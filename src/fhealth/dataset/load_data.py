@@ -5,9 +5,11 @@ import pandas as pd
 from fhealth.dataset.extract_data import GCPCsvHandler, GCPImageHandler
 from fhealth.dataset.transform_data import ImageDataHandler
 from fhealth.params import (
+    BLEND_GIVEN_DATA_STATUS,
     GCP_MASK_PATH,
     GCP_METADATA_PATH_AND_LABELS,
     GCP_RGB_IMAGE_PATH,
+    LOCAL_BLENDED_RGB_IMAGE_NAME,
     LOCAL_EXAMPLES_PATH,
     LOCAL_MASK_IMAGE_NAME,
     LOCAL_METADATA_PATH,
@@ -91,7 +93,9 @@ def load_data_in_cache(*store_resolution: int | None) -> None:
             rgb_image=image.rgb_image, mask_polygons=image.mask
         )
         transformed_image.create_mask_from_polygons()
-        transformed_image.blend_mask_with_rgb()
+
+        if BLEND_GIVEN_DATA_STATUS[data_status]:
+            transformed_image.blend_mask_with_rgb()  # Blend the rgb image with mask given the data status
 
         if store_resolution:
             transformed_image.downgrade_resolution(store_resolution)
@@ -103,8 +107,19 @@ def load_data_in_cache(*store_resolution: int | None) -> None:
         try:
             os.makedirs(image_local_path)
 
-            rgb_image_local_path = f"{image_local_path}/{LOCAL_RGB_IMAGE_NAME}"
-            transformed_image.blended_image.save(rgb_image_local_path)
+            if transformed_image.blended_image:
+                blended_rgb_image_local_path = (
+                    f"{image_local_path}/{LOCAL_BLENDED_RGB_IMAGE_NAME}"
+                )
+                transformed_image.blended_image.save(
+                    blended_rgb_image_local_path
+                )  # Save the blended rgb image if the data status allow it
+
+            else:
+                rgb_image_local_path = f"{image_local_path}/{LOCAL_RGB_IMAGE_NAME}"
+                transformed_image.rgb_image.save(
+                    rgb_image_local_path
+                )  # Else save the rgb image
 
             mask_image_local_path = f"{image_local_path}/{LOCAL_MASK_IMAGE_NAME}"
             transformed_image.mask_image.save(mask_image_local_path)

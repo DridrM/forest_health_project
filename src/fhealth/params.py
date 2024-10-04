@@ -15,6 +15,9 @@ LOCAL_ROOT_DATA_PATH = os.environ.get("LOCAL_ROOT_DATA_PATH")
 # Default blending ratio to blend the mask with the rgb image
 DEFAULT_RGB_BLENDING_RATIO = 0.1
 
+# Dict that indicate if the rgb image should be blended with the mask given the data status
+BLEND_GIVEN_DATA_STATUS = {"train": True, "valid": False, "test": False}
+
 # Paths of the metadata csv files inside the GCP bucket
 GCP_TRAIN_METADATA_PATH = "train.csv"
 GCP_VALID_METADATA_PATH = "val.csv"
@@ -41,5 +44,6 @@ LOCAL_VALID_FOLDER = f"{LOCAL_EXAMPLES_PATH}/valid"
 LOCAL_TEST_FOLDER = f"{LOCAL_EXAMPLES_PATH}/test"
 
 # Names of the local rgb images and mask images
-LOCAL_RGB_IMAGE_NAME = "rgb_blended_image.png"
+LOCAL_RGB_IMAGE_NAME = "rgb_image.png"
+LOCAL_BLENDED_RGB_IMAGE_NAME = "rgb_blended_image.png"
 LOCAL_MASK_IMAGE_NAME = "mask_image.png"
