@@ -104,10 +104,10 @@ def load_data_in_cache(*store_resolution: int | None) -> None:
             os.makedirs(image_local_path)
 
             rgb_image_local_path = f"{image_local_path}/{LOCAL_RGB_IMAGE_NAME}"
-            transformed_image.rgb_image.save(rgb_image_local_path)
+            transformed_image.blended_image.save(rgb_image_local_path)
 
             mask_image_local_path = f"{image_local_path}/{LOCAL_MASK_IMAGE_NAME}"
-            transformed_image.blended_image.save(mask_image_local_path)
+            transformed_image.mask_image.save(mask_image_local_path)
 
         except OSError as e:
             print(e, f"The image {image_local_path} already exists.")

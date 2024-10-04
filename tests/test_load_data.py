@@ -98,22 +98,23 @@ def mock_image_data_handler(monkeypatch, mock_image, mock_polygon_list):
     return mock_data_handler
 
 
-@pytest.mark.skip("Test fail, unknown reason")
-def test_load_data_in_cache_creates_folders(monkeypatch, mock_gcp_csv_handler):
+@pytest.mark.skip(reason="Test fail, unknown reason")
+def test_load_data_in_cache_creates_folders(monkeypatch):
     """
     Test if the load_data_in_cache function creates the required folders when they don't exist.
     """
 
+    # Patch os.makedirs with monkeypatch
     def mock_makedirs(path):
         print(f"Mock created directory: {path}")
 
-    # Patch os.makedirs with monkeypatch
     monkeypatch.setattr(os, "makedirs", mock_makedirs)
 
     # Mock pd.read_csv to raise a FileNotFoundError
-    monkeypatch.setattr(
-        pd, "read_csv", lambda path: (_ for _ in ()).throw(FileNotFoundError)
-    )
+    def raise_file_not_foud_error(*args):
+        raise FileNotFoundError
+
+    monkeypatch.setattr(pd, "read_csv", raise_file_not_foud_error)
 
     # Mock print
     monkeypatch.setattr("builtins.print", lambda msg: None)
@@ -123,8 +124,8 @@ def test_load_data_in_cache_creates_folders(monkeypatch, mock_gcp_csv_handler):
     # No assertions necessary as we are verifying output and mock behavior
 
 
-@pytest.mark.skip("Test doesn't work in github actions")
-def test_load_data_in_cache_creates_metadata(monkeypatch, mock_gcp_csv_handler):
+@pytest.mark.skip(reason="Test doesn't work in github actions")
+def test_load_data_in_cache_creates_metadata(monkeypatch):
     """
     Test if load_data_in_cache correctly creates the metadata CSV when not found locally.
     """
@@ -133,9 +134,10 @@ def test_load_data_in_cache_creates_metadata(monkeypatch, mock_gcp_csv_handler):
         print(f"Mocked saving DataFrame to {path}")
 
     # Mock pd.read_csv to raise a FileNotFoundError
-    monkeypatch.setattr(
-        pd, "read_csv", lambda path: (_ for _ in ()).throw(FileNotFoundError)
-    )
+    def raise_file_not_foud_error(*args):
+        raise FileNotFoundError
+
+    monkeypatch.setattr(pd, "read_csv", raise_file_not_foud_error)
 
     # Monkeypatch to_csv and GCPCsvHandler's load_csv method
     monkeypatch.setattr(pd.DataFrame, "to_csv", mock_to_csv)

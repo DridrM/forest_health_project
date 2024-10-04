@@ -41,5 +41,5 @@ LOCAL_VALID_FOLDER = f"{LOCAL_EXAMPLES_PATH}/valid"
 LOCAL_TEST_FOLDER = f"{LOCAL_EXAMPLES_PATH}/test"
 
 # Names of the local rgb images and mask images
-LOCAL_RGB_IMAGE_NAME = "rgb_image.png"
+LOCAL_RGB_IMAGE_NAME = "rgb_blended_image.png"
 LOCAL_MASK_IMAGE_NAME = "mask_image.png"
