@@ -94,7 +94,7 @@ def load_data_in_cache(*store_resolution: int | None) -> None:
         )
         transformed_image.create_mask_from_polygons()
 
-        if BLEND_GIVEN_DATA_STATUS[data_status]:
+        if BLEND_GIVEN_DATA_STATUS.get(data_status, True):
             transformed_image.blend_mask_with_rgb()  # Blend the rgb image with mask given the data status
 
         if store_resolution:
