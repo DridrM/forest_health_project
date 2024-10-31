@@ -43,6 +43,13 @@ LOCAL_TRAIN_FOLDER = f"{LOCAL_EXAMPLES_PATH}/train"
 LOCAL_VALID_FOLDER = f"{LOCAL_EXAMPLES_PATH}/valid"
 LOCAL_TEST_FOLDER = f"{LOCAL_EXAMPLES_PATH}/test"
 
+# Dict containing the local data path
+LOCAL_DATA_FOLDERS = {
+    "train": LOCAL_TRAIN_FOLDER,
+    "valid": LOCAL_VALID_FOLDER,
+    "test": LOCAL_TEST_FOLDER,
+}
+
 # Names of the local rgb images and mask images
 LOCAL_RGB_IMAGE_NAME = "rgb_image.png"
 LOCAL_BLENDED_RGB_IMAGE_NAME = "rgb_blended_image.png"
