@@ -47,9 +47,16 @@ class ForestHealthDataset(Dataset):
         Returns:
             None
         """
+        # Download the full dataset if needed
+        if download and store_resolution:
+            load_data_in_cache(*store_resolution)
+
+        if download and (not store_resolution):
+            load_data_in_cache()
+
         # Read the metadata.csv file to acquire the local image and mask folder path
         self.data_status = data_status
-        self.data_path = pathlib.Path(LOCAL_DATA_FOLDERS[self.data_status])
+        self.data_path = pathlib.Path(LOCAL_DATA_FOLDERS.get(self.data_status, "train"))
         self.metadata = pd.read_csv(LOCAL_METADATA_PATH).query(
             f"data_status == '{self.data_status}'"
         )
@@ -57,10 +64,6 @@ class ForestHealthDataset(Dataset):
         # Transformation functions for the image and the mask
         self.transform = transform
         self.target_transform = target_transform
-
-        # Download the full dataset if needed
-        if download:
-            load_data_in_cache(*store_resolution)
 
     def __len__(self) -> int:
         """
