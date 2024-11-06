@@ -50,9 +50,9 @@ def mock_read_csv(monkeypatch):
 
 
 @pytest.fixture
-def mock_read_image(monkeypatch):
+def mock_decode_image(monkeypatch):
     """
-    Monkeypatch the `torchvision.io.read_image` function.
+    Monkeypatch the `torchvision.io.decode_image` function.
     """
     fake_image_and_mask = torch.rand(64, 64).unsqueeze(0)
 
@@ -76,7 +76,7 @@ def fake_forest_health_dataset(
     monkeypatch,
     mock_local_root_data_path,
     mock_read_csv,
-    mock_read_image,
+    mock_decode_image,
     fake_transform,
 ):
     """

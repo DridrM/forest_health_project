@@ -65,8 +65,8 @@ def load_data_in_cache(*store_resolution: int | None) -> None:
             csv_metadata.csv_data["example_path"] = csv_metadata.csv_data[
                 "example_path"
             ].apply(
-                lambda x: x.split()[-1]
-            )  # Modify in place the 'example_path' column
+                lambda x: x.split("/")[-1]
+            )  # Modify the 'example_path' column
             csv_metadata_list.append(csv_metadata.csv_data)
 
         metadata_df = pd.concat(csv_metadata_list)
