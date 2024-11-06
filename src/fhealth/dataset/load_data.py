@@ -119,15 +119,22 @@ def load_data_in_cache(*store_resolution: int | None) -> None:
                 transformed_image.blended_image.save(
                     blended_rgb_image_local_path
                 )  # Save the blended rgb image if the data status allow it
+                print(
+                    f"the blended rgb image {blended_rgb_image_local_path} is saved into disk"
+                )
 
             else:
                 rgb_image_local_path = f"{image_local_path}/{LOCAL_RGB_IMAGE_NAME}"
                 transformed_image.rgb_image.save(
                     rgb_image_local_path
                 )  # Else save the rgb image
+                print(f"the rgb image {rgb_image_local_path} is saved into disk")
 
             mask_image_local_path = f"{image_local_path}/{LOCAL_MASK_IMAGE_NAME}"
-            transformed_image.mask_image.save(mask_image_local_path)
+            transformed_image.mask_image.save(
+                mask_image_local_path
+            )  # Save the mask image
+            print(f"the mask image {mask_image_local_path} is saved into disk")
 
         except OSError as e:
             print(e, f"The image {image_local_path} already exists.")
