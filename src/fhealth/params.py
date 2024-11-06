@@ -10,7 +10,7 @@ GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 
 GCP_BUCKET_NAME = os.environ.get("GCP_BUCKET_NAME")
 
-LOCAL_ROOT_DATA_PATH = os.environ.get("LOCAL_ROOT_DATA_PATH")
+LOCAL_ROOT_DATA_PATH = os.environ.get("LOCAL_ROOT_DATA_PATH", "/")
 
 # Default blending ratio to blend the mask with the rgb image
 DEFAULT_RGB_BLENDING_RATIO = 0.1

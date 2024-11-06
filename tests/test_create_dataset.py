@@ -13,6 +13,23 @@ from fhealth.modeling.create_dataset import ForestHealthDataset
 
 
 @pytest.fixture
+def mock_local_root_data_path(monkeypatch):
+    """
+    Mock the root data path on my machine as it cannot be accessed
+    by github actions when testing.
+    """
+    fake_local_data_folders = {
+        "train": "fake/data/folder",
+        "valid": "fake/data/folder",
+        "test": "fake/data/folder",
+    }
+
+    monkeypatch.setattr(
+        fhealth.modeling.create_dataset, "LOCAL_DATA_FOLDERS", fake_local_data_folders
+    )
+
+
+@pytest.fixture
 def mock_read_csv(monkeypatch):
     """
     Create a fake metadata dataframe.
@@ -56,7 +73,11 @@ def fake_transform():
 
 @pytest.fixture
 def fake_forest_health_dataset(
-    monkeypatch, mock_read_csv, mock_read_image, fake_transform
+    monkeypatch,
+    mock_local_root_data_path,
+    mock_read_csv,
+    mock_read_image,
+    fake_transform,
 ):
     """
     Fixture that initialize a ForestHealthDataset object with mocked data_path and metadata fields.
@@ -77,9 +98,6 @@ def fake_forest_health_dataset(
         transform=fake_transform,
         target_transform=fake_transform,
     )
-
-    # Replace the data_path by a fake path
-    dataset.data_path = pathlib.Path("fake/data/folder")
 
     return dataset
 
