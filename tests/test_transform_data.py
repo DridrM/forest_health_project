@@ -66,7 +66,7 @@ def test_blend_mask_with_rgb(handler_with_data):
     assert handler_with_data.blended_image.size == handler_with_data.rgb_image.size
 
     # Ensure the blended image is in RGBA mode (since blending converts to RGBA)
-    assert handler_with_data.blended_image.mode == "RGBA"
+    assert handler_with_data.blended_image.mode == "RGB"
 
 
 def test_downgrade_resolution(handler_with_data):

@@ -62,11 +62,6 @@ def load_data_in_cache(*store_resolution: int | None) -> None:
         for label, csv_blob_name in csv_metadata_gcp_path_and_labels.items():
             csv_metadata.load_csv(csv_blob_name)
             csv_metadata.csv_data["data_status"] = label  # Add data_status column
-            csv_metadata.csv_data["example_path"] = csv_metadata.csv_data[
-                "example_path"
-            ].apply(
-                lambda x: x.split("/")[-1]
-            )  # Modify the 'example_path' column
             csv_metadata_list.append(csv_metadata.csv_data)
 
         metadata_df = pd.concat(csv_metadata_list)

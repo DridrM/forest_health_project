@@ -27,10 +27,10 @@ def show_batch_images(
     Returns:
         None
     """
-    image_grid = torchvision.utils.make_grid(
-        images, nrow=nrows
-    )  # make_grid create 3 channel image by default
+    image_grid = torchvision.utils.make_grid(images, nrow=nrows).permute(
+        1, 2, 0
+    )  # make_grid create 3 channel image by default, but you have to put the number of channels as the last index
     plt.figure(figsize=figsize)
-    plt.imshow(image_grid)
+    plt.imshow(image_grid, interpolation="nearest")
     plt.axis("off")
     plt.show()

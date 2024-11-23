@@ -88,7 +88,9 @@ class ForestHealthDataset(Dataset):
         """
         # Extract local image and label folder name
         try:
-            image_label_local_folder = self.metadata.loc[index, "example_path"]
+            image_label_local_folder = self.metadata.loc[index, "example_path"].split(
+                "/"
+            )[-1]
 
         except IndexError as e:
             print(

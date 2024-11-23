@@ -67,7 +67,8 @@ class ImageDataHandler(BaseModel):
             self.blending_alpha,
         )
 
-        self.blended_image = blended_image
+        # Convert the RGBA blended image to RGB by discarding the alpha channel
+        self.blended_image = blended_image.convert("RGB")
 
     def create_mask_from_polygons(self) -> None:
         """
