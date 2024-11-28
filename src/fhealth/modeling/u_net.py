@@ -5,7 +5,9 @@ from torchvision.transforms.functional import center_crop
 
 
 class CNNBlock(nn.Module):
-    """"""
+    """
+    CNN block with a conv 2D layer and a batch normalisation layer.
+    """
 
     def __init__(
         self,
@@ -15,7 +17,21 @@ class CNNBlock(nn.Module):
         stride: int = 1,
         padding: int = 0,
     ) -> None:
-        """ """
+        """
+        Initialize the conv 2D layer and the batch norm layer.
+
+        Args:
+        - in_channels (int): The number of input channels of the cond 2D layer.
+        - out_channels (int): The number of output channels of the conv 2D layer.
+
+        Params:
+        - kernel_size (int): Lenght of the square side of the kernel of the conv 2D layer (square kernel).
+        - stride (int): Number of pixel in one dimension the kernel has to move on at each step.
+        - padding (int): Number of offset pixel in each dimension the kernel has to start on at beginning of each conv.
+
+        Returns:
+        - None
+        """
         super().__init__()
 
         self.seq_block = nn.Sequential(
@@ -24,34 +40,65 @@ class CNNBlock(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """ """
+        """
+        Apply the conv 2D layer and the batch norm layer, wrap them up inside
+        a Relu function.
+
+        Args:
+        - x (torch.Tensor): A torch tensor representing a multi-channels image.
+
+        Returns:
+        - x (torch.Tensor): A tensor representing encoded features.
+        """
         x = F.relu(self.seq_block(x))
 
         return x
 
 
 class CNNBlocks(nn.Module):
-    """"""
+    """
+    Chain multiple CNN block together. Use the previously defined CNNBlock object.
+    """
 
     def __init__(
         self,
-        n_conv_blocks: int,  # Transform into a list for further versions
+        n_conv_blocks: int,
         in_channels: int,
         out_channels: int,
         padding: int,
     ) -> None:
-        """ """
+        """
+        Use the nn.ModuleList to chain multiple CNNBlock together, allowing
+        easy itteration through the CNN blocks.
+
+        Args:
+        - n_conv_blocks (int): The number of CNNBlock objects to chain.
+        - in_channels (int): The number of input channels of the cond 2D layer inside one CNNBlock.
+        - out_channels (int): The number of output channels of the conv 2D layer inside one CNNBlock.
+        - padding (int): Number of offset pixel in each dimension the kernel has to start on at beginning of each conv.
+
+        Returns:
+        - None
+        """
         super().__init__()
 
         self.blocks = nn.ModuleList()
 
         for _ in range(n_conv_blocks):
-            self.blocks.append(CNNBlock(in_channels, out_channels, padding))
+            self.blocks.append(CNNBlock(in_channels, out_channels, padding=padding))
 
             in_channels = out_channels
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """ """
+        """
+        Apply the block sequentialy.
+
+        Args:
+        - x (torch.Tensor): A torch tensor representing a multi-channels image.
+
+        Returns:
+        - x (torch.Tensor): A tensor representing encoded features.
+        """
         for block in self.blocks:
             x = block(x)
 
@@ -59,7 +106,11 @@ class CNNBlocks(nn.Module):
 
 
 class Encoder(nn.Module):
-    """"""
+    """
+    The goal of the Encoder is to extract the meaninfull features from
+    the original image by chaining CNNBlocks object with increasing
+    depth (more output layer the deeper).
+    """
 
     def __init__(
         self,
@@ -124,7 +175,7 @@ class Decoder(nn.Module):
             self.decoder_blocks += [
                 nn.ConvTranspose2d(
                     in_channels, out_channels, kernel_size=2, stride=2
-                ),  # Must be same kernel size and stride as the Max Pool layers
+                ),  # Must be same kernel size and stride as the Max Pool layers inside the encoder
                 CNNBlocks(2, in_channels, out_channels, padding=padding),
             ]
 
@@ -176,6 +227,7 @@ class Unet(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """"""
         x, bypass = self.encoder(x)
         x = self.decoder(x, bypass)
 
