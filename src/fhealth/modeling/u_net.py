@@ -120,7 +120,24 @@ class Encoder(nn.Module):
         downhill_mult: int = 2,
         downhill: int = 4,
     ) -> None:
-        """ """
+        """
+        Chain multiple couples CNNBlocks / MaxPool2d layers together.
+        Set the input channels equal to the output channels of the previous CNNBlocks object.
+        At each iteration to add a couple CNNBlocks / MaxPool2d, multiply the
+        number of output channels by a given integer (by default 2). In other
+        words, each CNNBlocks object has twice the number of output channels than
+        the number of input channels.
+        At the end, add a last single CNNBlocks object at the 'tip' of the U network.
+
+        Args:
+        - in_channels (int): The number of input channels of the first CNNBlocks object.
+        - out_channels (int): The number of output channels of the first CNNBlocks object.
+        - padding (int): The padding parameter (offset pixel starting point of kernels) for CNNBlocks.
+
+        Params:
+        - downhill_mult (int, default 2): The multiplicator from the number of input channels to the number of output ones.
+        - downhill (int, default 4): the number of couples CNNBlocks / MaxPool2d layers to chain together.
+        """
         super().__init__()
 
         self.encoder_blocks = nn.ModuleList()
@@ -140,7 +157,19 @@ class Encoder(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """ """
+        """
+        Compute the blocks sequentialy. If the block is of type CNNBlocks,
+        take the output tensor and append it inside a bypass list.
+        this bypass list will store intermediate computation of the Encoder
+        to pass them to the corresponding stages of the Decoder.
+
+        Args:
+        - x (torch.Tensor): A torch tensor representing a multi-channels image.
+
+        Returns:
+        - x (torch.Tensor): A tensor representing encoded features.
+        - bypass (list): A list of tensors representing the intermediate stages of computation.
+        """
         bypass = []
 
         for blocks in self.encoder_blocks:
