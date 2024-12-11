@@ -136,7 +136,7 @@ class Encoder(nn.Module):
 
         Params:
         - downhill_mult (int, default 2): The multiplicator from the number of input channels to the number of output ones.
-        - downhill (int, default 4): the number of couples CNNBlocks / MaxPool2d layers to chain together.
+        - downhill (int, default 4): The number of couples CNNBlocks / MaxPool2d layers to chain together.
         """
         super().__init__()
 
@@ -156,7 +156,7 @@ class Encoder(nn.Module):
             CNNBlocks(2, in_channels, out_channels, padding=padding)
         )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, list[torch.Tensor]]:
         """
         Compute the blocks sequentialy. If the block is of type CNNBlocks,
         take the output tensor and append it inside a bypass list.
@@ -184,7 +184,15 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    """ """
+    """
+    The purpose of the Decoder is to match the extracted features received
+    from the Encoder to pixel-by-pixel labelised masks. To do so the
+    Decoder is (almost) the mirror image of the Encoder. It has several
+    stages that take into input the previous Decoder stage output and the
+    corresponding Encoder stage's output. At the end, an exit layer map the
+    number of channels of the training image with the number of channels of
+    the corresponding mask.
+    """
 
     def __init__(
         self,
@@ -195,7 +203,23 @@ class Decoder(nn.Module):
         uphill_div: int = 2,
         uphill: int = 4,
     ) -> None:
-        """ """
+        """
+        Chain together multiple couples ConvTranspose2D / CNNBlocks together.
+        The ConvTranspose2D layer upsample a tensor with `in_channels` channels
+        to a tensor with `out_channels` channels (invers operation of Conv2D).
+        Here, at the opposite of the Encoder, we divide both `in_channels` and
+        `out_channels` by the same integer (by default 2).
+
+        Args:
+        - in_channels (int): The number of input channels of the first CNNBlocks object.
+        - out_channels (int): The number of output channels of the first CNNBlocks object.
+        - exit_channels (int): The number of channels of the mask.
+        - padding (int): The padding parameter (offset pixel starting point of kernels) for CNNBlocks.
+
+        Params:
+        - uphill_div (int, default 2): The divider from the number of input / output channels from one step to another.
+        - uphill (int, default 4): The number of couples CNNBlocks / convTranspose2D layers to chain together.
+        """
         super().__init__()
 
         self.decoder_blocks = nn.ModuleList()
@@ -216,22 +240,39 @@ class Decoder(nn.Module):
             nn.Conv2d(in_channels, exit_channels, kernel_size=1, padding=padding)
         )
 
-    def forward(self, x: torch.Tensor, bypass: list) -> torch.Tensor:
-        """"""
+    def forward(self, x: torch.Tensor, bypass: list[torch.Tensor]) -> torch.Tensor:
+        """
+        If the block is of type CNNBlocks, we take the last element of the
+        bypass list from the Encoder, we apply a crop and a center transformation,
+        and we stack the bypass element to the input destinated to the CNNBlocks.
+        We then iteratively compute either the output of CNNBlocks either the
+        ConvTranspose2D's one.
+
+        Args:
+        - x (torch.Tensor): A torch tensor representing a multi-channels encoded image.
+        - bypass (list of torch Tensors): The list of non-Maxpooled intermediate results from the Encoder
+
+        Returns:
+        - x (torch.Tensor): A tensor representing a predicted mask.
+        """
         bypass.pop(-1)  # We don't use the last element from the tip of the 'U'
 
         for blocks in self.decoder_blocks:
-            x = blocks(x)
-
+            # Center, crop and stack the results of corresponding
+            # level in the Encoder to the input of the curent couple CNNBlocks / ConvTranspose2D
             if isinstance(blocks, CNNBlocks):
                 bypass[-1] = center_crop(bypass[-1], output_size=x.shape[2])
                 x = torch.cat([x, bypass.pop(-1)], dim=1)
+
+            x = blocks(x)
 
         return x
 
 
 class Unet(nn.Module):
-    """"""
+    """
+    Pack together the Encoder and the Decoder part of the U-net.
+    """
 
     def __init__(
         self,
@@ -239,24 +280,52 @@ class Unet(nn.Module):
         first_out_channels: int,
         exit_channels: int,
         downhill: int,
+        interblock_mult: int = 2,
         padding: int = 0,
     ) -> None:
-        """"""
+        """
+        Instanciate the Encoder and the Decoder.
+        For the Decoder, the `in_channels` and the `out_channels` are calculated
+        using the depth of the U-net (`downhill` argument) and the multiplicative
+        factor for the number of channels at each stage of the U-net (`interblock_mult`).
+
+        Args:
+        - in_channels (int): The number of channels of the input image.
+        - first_out_channels (int): The number of output channels of the first CNNBlock.
+        - exit_channels (int): The number of channels of the mask.
+        - downhill (int): The number of stages of the U-net.
+
+        Params:
+        - interblock_mult (int): The multiplicator integer of output channels between stages.
+        - padding (int): Number of offset pixel in each dimension the kernel has to start on at beginning of each conv.
+        """
         super().__init__()
 
         self.encoder = Encoder(
-            in_channels, first_out_channels, downhill=downhill, padding=padding
+            in_channels=in_channels,
+            out_channels=first_out_channels,
+            downhill=downhill,
+            padding=padding,
+            downhill_mult=interblock_mult,
         )
         self.decoder = Decoder(
-            first_out_channels * (2**downhill),
-            first_out_channels * (2 ** (downhill - 1)),
+            in_channels=first_out_channels * (interblock_mult**downhill),
+            out_channels=first_out_channels * (interblock_mult ** (downhill - 1)),
             exit_channels=exit_channels,
             padding=padding,
             uphill=downhill,
+            uphill_div=interblock_mult,
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """"""
+        """
+        Apply the Encoder and the Decoder part of the U-net.
+
+        Args:
+        - x (torch.Tensor): A torch tensor representing a multi-channels image.
+
+        Returns: A predicted mask (torch.Tensor).
+        """
         x, bypass = self.encoder(x)
         x = self.decoder(x, bypass)
 
