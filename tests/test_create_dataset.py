@@ -8,8 +8,8 @@ import torch
 from torchvision.transforms import Normalize
 
 import fhealth.dataset.load_data
-import fhealth.modeling.create_dataset
-from fhealth.modeling.create_dataset import ForestHealthDataset
+import fhealth.train.create_dataset
+from fhealth.train.create_dataset import ForestHealthDataset
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def mock_local_root_data_path(monkeypatch):
     }
 
     monkeypatch.setattr(
-        fhealth.modeling.create_dataset, "LOCAL_DATA_FOLDERS", fake_local_data_folders
+        fhealth.train.create_dataset, "LOCAL_DATA_FOLDERS", fake_local_data_folders
     )
 
 
@@ -57,7 +57,7 @@ def mock_decode_image(monkeypatch):
     fake_image_and_mask = torch.rand(64, 64).unsqueeze(0)
 
     monkeypatch.setattr(
-        fhealth.modeling.create_dataset,
+        fhealth.train.create_dataset,
         "decode_image",
         lambda *args, **kwargs: fake_image_and_mask,
     )
