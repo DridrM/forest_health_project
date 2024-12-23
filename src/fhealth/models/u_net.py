@@ -16,6 +16,7 @@ class CNNBlock(nn.Module):
         kernel_size: int = 3,
         stride: int = 1,
         padding: int = 0,
+        dropout: float = 0.4,
     ) -> None:
         """
         Initialize the conv 2D layer and the batch norm layer.
@@ -37,6 +38,7 @@ class CNNBlock(nn.Module):
         self.seq_block = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding),
             nn.BatchNorm2d(out_channels),
+            nn.Dropout2d(p=dropout),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -66,6 +68,7 @@ class CNNBlocks(nn.Module):
         in_channels: int,
         out_channels: int,
         padding: int,
+        dropout: float,
     ) -> None:
         """
         Use the nn.ModuleList to chain multiple CNNBlock together, allowing
@@ -85,7 +88,9 @@ class CNNBlocks(nn.Module):
         self.blocks = nn.ModuleList()
 
         for _ in range(n_conv_blocks):
-            self.blocks.append(CNNBlock(in_channels, out_channels, padding=padding))
+            self.blocks.append(
+                CNNBlock(in_channels, out_channels, padding=padding, dropout=dropout)
+            )
 
             in_channels = out_channels
 
@@ -117,6 +122,7 @@ class Encoder(nn.Module):
         in_channels: int,
         out_channels: int,
         padding: int,
+        dropout: float,
         downhill_mult: int = 2,
         downhill: int = 4,
     ) -> None:
@@ -144,7 +150,9 @@ class Encoder(nn.Module):
 
         for _ in range(downhill):
             self.encoder_blocks += [
-                CNNBlocks(2, in_channels, out_channels, padding=padding),
+                CNNBlocks(
+                    2, in_channels, out_channels, padding=padding, dropout=dropout
+                ),
                 nn.MaxPool2d(2, 2),
             ]
 
@@ -153,7 +161,7 @@ class Encoder(nn.Module):
 
         # Bottom encoder blocks of the network
         self.encoder_blocks.append(
-            CNNBlocks(2, in_channels, out_channels, padding=padding)
+            CNNBlocks(2, in_channels, out_channels, padding=padding, dropout=dropout)
         )
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, list[torch.Tensor]]:
@@ -200,6 +208,7 @@ class Decoder(nn.Module):
         out_channels: int,
         exit_channels: int,
         padding: int,
+        dropout: float,
         uphill_div: int = 2,
         uphill: int = 4,
     ) -> None:
@@ -229,7 +238,9 @@ class Decoder(nn.Module):
                 nn.ConvTranspose2d(
                     in_channels, out_channels, kernel_size=2, stride=2
                 ),  # Must be same kernel size and stride as the Max Pool layers inside the encoder
-                CNNBlocks(2, in_channels, out_channels, padding=padding),
+                CNNBlocks(
+                    2, in_channels, out_channels, padding=padding, dropout=dropout
+                ),
             ]
 
             in_channels //= uphill_div
@@ -280,6 +291,7 @@ class Unet(nn.Module):
         first_out_channels: int,
         exit_channels: int,
         downhill: int,
+        dropout: float = 0.4,
         interblock_mult: int = 2,
         padding: int = 0,
     ) -> None:
@@ -306,6 +318,7 @@ class Unet(nn.Module):
             out_channels=first_out_channels,
             downhill=downhill,
             padding=padding,
+            dropout=dropout,
             downhill_mult=interblock_mult,
         )
         self.decoder = Decoder(
@@ -313,6 +326,7 @@ class Unet(nn.Module):
             out_channels=first_out_channels * (interblock_mult ** (downhill - 1)),
             exit_channels=exit_channels,
             padding=padding,
+            dropout=dropout,
             uphill=downhill,
             uphill_div=interblock_mult,
         )
