@@ -54,3 +54,10 @@ LOCAL_DATA_FOLDERS = {
 LOCAL_RGB_IMAGE_NAME = "rgb_image.png"
 LOCAL_BLENDED_RGB_IMAGE_NAME = "rgb_blended_image.png"
 LOCAL_MASK_IMAGE_NAME = "mask_image.png"
+
+
+###############################
+# Params for the train module #
+###############################
+
+TRAINED_MODELS_FOLDER = "./trained_models"

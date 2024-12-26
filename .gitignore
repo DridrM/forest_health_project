@@ -73,6 +73,7 @@ target/
 *checkpoint.ipynb
 *.ipynb_checkpoints
 *.ipynb
+notebooks/
 
 # pyenv
 .python-version

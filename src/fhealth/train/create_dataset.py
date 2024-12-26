@@ -3,7 +3,7 @@ from typing import Any
 
 import pandas as pd
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset
 from torchvision.io import decode_image
 
 from fhealth.dataset.load_data import load_data_in_cache
@@ -57,8 +57,10 @@ class ForestHealthDataset(Dataset):
         # Read the metadata.csv file to acquire the local image and mask folder path
         self.data_status = data_status
         self.data_path = pathlib.Path(LOCAL_DATA_FOLDERS.get(self.data_status, "train"))
-        self.metadata = pd.read_csv(LOCAL_METADATA_PATH).query(
-            f"data_status == '{self.data_status}'"
+        self.metadata = (
+            pd.read_csv(LOCAL_METADATA_PATH)
+            .query(f"data_status == '{self.data_status}'")
+            .reset_index()
         )
 
         # Transformation functions for the image and the mask
@@ -123,3 +125,11 @@ class ForestHealthDataset(Dataset):
             mask_image = self.target_transform(mask_image)
 
         return image, mask_image
+
+
+if __name__ == "__main__":
+    training_set = ForestHealthDataset(data_status="test", download=False)
+    training_loader = DataLoader(training_set, batch_size=32, shuffle=True)
+
+    for images, masks in training_loader:
+        print("Images and masks succesfully loaded.")
