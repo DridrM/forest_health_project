@@ -1,20 +1,45 @@
 import pathlib
+import random
 from typing import Any
 
 import pandas as pd
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset
 from torchvision.io import decode_image
 
 from fhealth.dataset.load_data import load_data_in_cache
 from fhealth.params import (
     BLEND_GIVEN_DATA_STATUS,
-    LOCAL_BLENDED_RGB_IMAGE_NAME,
+    DEFAULT_RGB_BLENDING_RATIO,
     LOCAL_DATA_FOLDERS,
     LOCAL_MASK_IMAGE_NAME,
     LOCAL_METADATA_PATH,
     LOCAL_RGB_IMAGE_NAME,
 )
+
+
+def blend_image_with_mask(
+    rgb_image: torch.Tensor,
+    mask: torch.Tensor,
+    alpha: float = DEFAULT_RGB_BLENDING_RATIO,
+) -> torch.Tensor:
+    """
+    Blend a given RGB training image with its corresponding mask.
+
+    Args:
+    - rgb_image (torch.Tensor): A training RGB image
+    - mask (torch.Tensor): A mask corresponding to a segmented region on rgb image.
+
+    Params:
+    - alpha (float): The blending ratio between rgb image and its mask.
+
+    Returns:
+    - torch.Tensor: A RGB image blended with its mask
+    """
+    if not (0 < alpha <= 1):
+        raise ValueError("Blending alpha must be between 0 excluded and 1.")
+
+    return alpha * mask + (1 - alpha) * rgb_image
 
 
 class ForestHealthDataset(Dataset):
@@ -27,6 +52,7 @@ class ForestHealthDataset(Dataset):
         self,
         data_status: str,
         download: bool,
+        prop_blend_train: float = 0.0,
         store_resolution: tuple | None = None,
         transform: Any | None = None,
         target_transform: Any | None = None,
@@ -62,6 +88,9 @@ class ForestHealthDataset(Dataset):
             .query(f"data_status == '{self.data_status}'")
             .reset_index()
         )
+
+        # Proportion of training images to blend
+        self.prop_blend_train = prop_blend_train
 
         # Transformation functions for the image and the mask
         self.transform = transform
@@ -99,17 +128,8 @@ class ForestHealthDataset(Dataset):
                 f"Check the names of the columns of the {LOCAL_METADATA_PATH} file.", e
             )
 
-        # Get image, taking into account that the name change depending on if the rgb image is blended with the mask or not
-        if BLEND_GIVEN_DATA_STATUS.get(self.data_status, True):
-            image_path = (
-                self.data_path / image_label_local_folder / LOCAL_BLENDED_RGB_IMAGE_NAME
-            )
-
-        else:
-            image_path = (
-                self.data_path / image_label_local_folder / LOCAL_RGB_IMAGE_NAME
-            )
-
+        # Get image
+        image_path = self.data_path / image_label_local_folder / LOCAL_RGB_IMAGE_NAME
         image = decode_image(image_path)
 
         # Get labels (mask image)
@@ -124,12 +144,19 @@ class ForestHealthDataset(Dataset):
         if self.target_transform:
             mask_image = self.target_transform(mask_image)
 
+        # Random blend the TRAINING images only with masks, given a proportion of images blended
+        blend_status = BLEND_GIVEN_DATA_STATUS.get(self.data_status)
+        blend = random.uniform(0, 1) <= self.prop_blend_train
+
+        if blend_status and blend:
+            image = blend_image_with_mask(image, mask_image)
+
         return image, mask_image
 
 
-if __name__ == "__main__":
-    training_set = ForestHealthDataset(data_status="test", download=False)
-    training_loader = DataLoader(training_set, batch_size=32, shuffle=True)
+# if __name__ == "__main__":
+#     training_set = ForestHealthDataset(data_status="test", download=False)
+#     training_loader = DataLoader(training_set, batch_size=32, shuffle=True)
 
-    for images, masks in training_loader:
-        print("Images and masks succesfully loaded.")
+#     for images, masks in training_loader:
+#         print("Images and masks succesfully loaded.")

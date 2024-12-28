@@ -1,15 +1,14 @@
 import os
 
 import pandas as pd
+from tqdm import tqdm
 
 from fhealth.dataset.extract_data import GCPCsvHandler, GCPImageHandler
 from fhealth.dataset.transform_data import ImageDataHandler
 from fhealth.params import (
-    BLEND_GIVEN_DATA_STATUS,
     GCP_MASK_PATH,
     GCP_METADATA_PATH_AND_LABELS,
     GCP_RGB_IMAGE_PATH,
-    LOCAL_BLENDED_RGB_IMAGE_NAME,
     LOCAL_EXAMPLES_PATH,
     LOCAL_MASK_IMAGE_NAME,
     LOCAL_METADATA_PATH,
@@ -68,7 +67,9 @@ def load_data_in_cache(*store_resolution: int | None) -> None:
         metadata_df.to_csv(LOCAL_METADATA_PATH)
 
     # Iterate over the metadata df:
-    for _, row in metadata_df.iterrows():
+    for _, row in tqdm(
+        metadata_df.iterrows(), desc="Saving the RGB and the mask images to disk : "
+    ):
         # Extract data status and GCP image path from row
         try:
             example_path, data_status = row["example_path"], row["data_status"]
@@ -94,9 +95,6 @@ def load_data_in_cache(*store_resolution: int | None) -> None:
         )
         transformed_image.create_mask_from_polygons()
 
-        if BLEND_GIVEN_DATA_STATUS.get(data_status, True):
-            transformed_image.blend_mask_with_rgb()  # Blend the rgb image with mask given the data status
-
         if store_resolution:
             transformed_image.downgrade_resolution(store_resolution)
 
@@ -107,29 +105,13 @@ def load_data_in_cache(*store_resolution: int | None) -> None:
         try:
             os.makedirs(image_local_path)
 
-            if transformed_image.blended_image:
-                blended_rgb_image_local_path = (
-                    f"{image_local_path}/{LOCAL_BLENDED_RGB_IMAGE_NAME}"
-                )
-                transformed_image.blended_image.save(
-                    blended_rgb_image_local_path
-                )  # Save the blended rgb image if the data status allow it
-                print(
-                    f"the blended rgb image {blended_rgb_image_local_path} is saved into disk"
-                )
+            # Else save the rgb image
+            rgb_image_local_path = f"{image_local_path}/{LOCAL_RGB_IMAGE_NAME}"
+            transformed_image.rgb_image.save(rgb_image_local_path)
 
-            else:
-                rgb_image_local_path = f"{image_local_path}/{LOCAL_RGB_IMAGE_NAME}"
-                transformed_image.rgb_image.save(
-                    rgb_image_local_path
-                )  # Else save the rgb image
-                print(f"the rgb image {rgb_image_local_path} is saved into disk")
-
+            # Save the mask image
             mask_image_local_path = f"{image_local_path}/{LOCAL_MASK_IMAGE_NAME}"
-            transformed_image.mask_image.save(
-                mask_image_local_path
-            )  # Save the mask image
-            print(f"the mask image {mask_image_local_path} is saved into disk")
+            transformed_image.mask_image.save(mask_image_local_path)
 
         except OSError as e:
             print(e, f"The image {image_local_path} already exists.")

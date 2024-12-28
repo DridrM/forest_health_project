@@ -52,7 +52,6 @@ LOCAL_DATA_FOLDERS = {
 
 # Names of the local rgb images and mask images
 LOCAL_RGB_IMAGE_NAME = "rgb_image.png"
-LOCAL_BLENDED_RGB_IMAGE_NAME = "rgb_blended_image.png"
 LOCAL_MASK_IMAGE_NAME = "mask_image.png"
 
 
@@ -60,4 +59,6 @@ LOCAL_MASK_IMAGE_NAME = "mask_image.png"
 # Params for the train module #
 ###############################
 
-TRAINED_MODELS_FOLDER = "./trained_models"
+LOCAL_PROJECT_PATH = os.environ.get("LOCAL_PROJECT_PATH")
+
+TRAINED_MODELS_FOLDER = f"{LOCAL_PROJECT_PATH}/trained_models"

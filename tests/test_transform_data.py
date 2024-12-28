@@ -37,9 +37,7 @@ def sample_polygons():
 @pytest.fixture
 def handler_with_data(sample_rgb_image, sample_polygons):
     """Fixture to initialize the ImageDataHandler with test data."""
-    return ImageDataHandler(
-        rgb_image=sample_rgb_image, mask_polygons=sample_polygons, blending_alpha=0.5
-    )
+    return ImageDataHandler(rgb_image=sample_rgb_image, mask_polygons=sample_polygons)
 
 
 def test_create_mask_from_polygons(handler_with_data):
@@ -54,38 +52,16 @@ def test_create_mask_from_polygons(handler_with_data):
     assert handler_with_data.mask_image.mode == "L"
 
 
-def test_blend_mask_with_rgb(handler_with_data):
-    """Test blending the mask with the RGB image."""
-    handler_with_data.create_mask_from_polygons()
-
-    # Blend the mask with the RGB image
-    handler_with_data.blend_mask_with_rgb()
-
-    # Check if the blended image is created and its size matches the original
-    assert handler_with_data.blended_image is not None
-    assert handler_with_data.blended_image.size == handler_with_data.rgb_image.size
-
-    # Ensure the blended image is in RGBA mode (since blending converts to RGBA)
-    assert handler_with_data.blended_image.mode == "RGB"
-
-
 def test_downgrade_resolution(handler_with_data):
     """Test downgrading the resolution of the mask and blended image."""
     handler_with_data.create_mask_from_polygons()
-    handler_with_data.blend_mask_with_rgb()
 
     # Downgrade resolution to 50x50
     handler_with_data.downgrade_resolution(50)
 
     # Check if the mask and blended images are resized to 50x50
     assert handler_with_data.mask_image.size == (50, 50)
-    assert handler_with_data.blended_image.size == (50, 50)
-
-
-def test_blend_without_mask_raises_error(handler_with_data):
-    """Test that blending without a mask raises an error."""
-    with pytest.raises(ValueError, match="Mask image not provided."):
-        handler_with_data.blend_mask_with_rgb()
+    assert handler_with_data.rgb_image.size == (50, 50)
 
 
 def test_create_mask_without_polygons_raises_error(sample_rgb_image):
@@ -99,16 +75,9 @@ def test_create_mask_without_polygons_raises_error(sample_rgb_image):
 
 
 def test_downgrade_resolution_without_images_raises_error(handler_with_data):
-    """Test that downgrading resolution without mask/blended images raises an error."""
+    """Test that downgrading resolution without mask image raises an error."""
     # Attempt to downgrade resolution without mask and blended images
     with pytest.raises(
         ValueError, match="Mask image not available for resolution downgrade."
-    ):
-        handler_with_data.downgrade_resolution(50)
-
-    # Set mask but not blended image
-    handler_with_data.create_mask_from_polygons()
-    with pytest.raises(
-        ValueError, match="Blended image not available for resolution downgrade."
     ):
         handler_with_data.downgrade_resolution(50)

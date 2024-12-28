@@ -79,17 +79,11 @@ def mock_image_data_handler(monkeypatch, mock_image, mock_polygon_list):
     def mock_create_mask_from_polygons():
         pass
 
-    def mock_blend_mask_with_rgb():
-        pass
-
     def mock_downgrade_resolution(res):
         pass
 
     monkeypatch.setattr(
         ImageDataHandler, "create_mask_from_polygons", mock_create_mask_from_polygons
-    )
-    monkeypatch.setattr(
-        ImageDataHandler, "blend_mask_with_rgb", mock_blend_mask_with_rgb
     )
     monkeypatch.setattr(
         ImageDataHandler, "downgrade_resolution", mock_downgrade_resolution
@@ -170,14 +164,8 @@ def test_load_data_in_cache_downloads_and_processes_images(
     def mock_create_mask_from_polygons():
         pass
 
-    def mock_blend_mask_with_rgb():
-        pass
-
     monkeypatch.setattr(
         ImageDataHandler, "create_mask_from_polygons", mock_create_mask_from_polygons
-    )
-    monkeypatch.setattr(
-        ImageDataHandler, "blend_mask_with_rgb", mock_blend_mask_with_rgb
     )
 
     # Run the function
